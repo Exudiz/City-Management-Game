@@ -1,10 +1,9 @@
 <?php
-
-require_once 'config_settings.php';
 require_once 'config.php';
+require 'config_settings.php';
 
 if (!isset($_SESSION['city'])) {
-    $_SESSION['city'] = new City($config); // Pass the configuration settings to the City constructor
+    $_SESSION['city'] = new City(isset($config) ? $config : []); // Pass the configuration settings to the City constructor
 }
 
 $city = $_SESSION['city']; // Add this line to retrieve the city object
@@ -30,22 +29,22 @@ class City
     private $balance;
     private $notifications = [];
     private $citizens = [];
-    private $houseCost = 100; // Set the cost to build one house
-    private $taxPerHouse = 20; // Set the tax collected per house
+    private $houseCost = 150; // Set the cost to build one house
+    private $taxPerHouse = 30; // Set the tax collected per house
     private $scheduledEvents = [];
 
-    public function __construct($config)
-    {
-        $this->population = $config['initial_population'];
-        $this->houses = $config['initial_houses'];
-        $this->homeless = $config['initial_homeless'];
-        $this->happiness = $config['initial_happiness'];
-        $this->taxLevel = $config['initial_tax_level'];
-        $this->balance = $config['initial_balance'];
-        $this->houseCost = $config['house_cost'];
-        $this->taxPerHouse = $config['tax_per_house'];
-        // ... (additional initialization)
-    }
+	public function __construct($config)
+	{
+		$this->population = $config['initial_population'] ?? 100;
+		$this->houses = $config['initial_houses'] ?? 0;
+		$this->homeless = $config['initial_homeless'] ?? 100;
+		$this->happiness = $config['initial_happiness'] ?? 75;
+		$this->taxLevel = $config['initial_tax_level'] ?? 2;
+		$this->balance = $config['initial_balance'] ?? 10000;
+		$this->houseCost = $config['house_cost'] ?? 150;
+		$this->taxPerHouse = $config['tax_per_house'] ?? 30;
+		// ... (additional initialization)
+	}
 	
     public function scheduleEvent($eventName, $condition, $message)
     {
@@ -136,28 +135,29 @@ class City
         $this->checkAndTriggerRandomEvent();
     }
 
-    public function displayStats()
-    {
-        $this->displayNotifications();
+	public function displayStats()
+	{
+		$this->displayNotifications();
 
-        $months = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
-        $currentMonth = $months[$this->currentMonth - 1];
-        $taxLevels = ['Low', 'Medium', 'High'];
+		$months = [
+			'January', 'February', 'March', 'April', 'May', 'June',
+			'July', 'August', 'September', 'October', 'November', 'December'
+		];
+		
+		$currentMonth = $months[$this->currentMonth - 1] ?? 'Unknown';
+		$taxLevels = ['Low', 'Medium', 'High'];
 
-        echo "<p>Current Month: {$currentMonth}</p>";
-        echo "<p>Current Year: " . ($this->startingYear + $this->getCurrentYear()) . "</p>"; // Use $startingYear and getCurrentYear
-        echo "<p>Population: {$this->population}</p>";
-        echo "<p>Houses: {$this->houses}</p>";
-        echo "<p>Homeless: {$this->homeless}</p>";
-        echo "<p>Happiness: {$this->happiness}%</p>";
-        echo "<p>Balance: {$this->balance}</p>";
-        echo "<p>Tax Level: {$taxLevels[$this->taxLevel - 1]}</p>"; // Show the Tax Level
-        echo "<p>Cost to Build One House: {$this->houseCost}</p>";
-        echo "<p>Tax Collected Per House: {$this->taxPerHouse}</p>";
-    }
+		echo "<p>Current Month: {$currentMonth}</p>";
+		echo "<p>Current Year: " . ($this->startingYear + $this->getCurrentYear()) . "</p>"; // Use $startingYear and getCurrentYear
+		echo "<p>Population: {$this->population}</p>";
+		echo "<p>Houses: {$this->houses}</p>";
+		echo "<p>Homeless: {$this->homeless}</p>";
+		echo "<p>Happiness: {$this->happiness}%</p>";
+		echo "<p>Balance: {$this->balance}</p>";
+		echo "<p>Tax Level: " . ($taxLevels[$this->taxLevel - 1] ?? 'Unknown') . "</p>"; // Show the Tax Level
+		echo "<p>Cost to Build One House: {$this->houseCost}</p>";
+		echo "<p>Tax Collected Per House: {$this->taxPerHouse}</p>";
+	}
 
     public function getCurrentMonth()
     {

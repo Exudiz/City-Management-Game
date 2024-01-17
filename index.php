@@ -5,53 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>City Management Game</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Add some basic styling for the countdown bar */
+        #countdown-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            display: none; /* Hide initially */
+        }
+
+        #countdown-bar {
+            height: 100%;
+            background-color: #4caf50;
+        }
+
+        #countdown-bar-title {
+            margin-top: 5px;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-
 <div id="loading-spinner"></div>
-
 <div class="container">
     <?php
-	require_once 'config_settings.php';
-    require_once 'config.php';
-    require_once 'header.php';
-    require_once 'City.php';
-	
-	// Pass the configuration settings to the City constructor
-	$city = isset($_SESSION['city']) ? $_SESSION['city'] : new City($config);
-	
-	// Ensure session variables are set
-	if (!isset($_SESSION['city'])) {
-		$_SESSION['city'] = new City($config); // Pass the configuration settings to the City constructor
-	}
+		require_once 'config.php';
+		require 'config_settings.php';
+        require_once 'header.php';
+		require_once 'City.php'; // Include the City class file
 
-	if (!isset($_SESSION['game_year'])) {
-		$_SESSION['game_year'] = date('Y');
-	}
+		$cityConfig = [
+			'initial_population' => 100,
+			'initial_houses' => 0,
+			'initial_homeless' => 50,
+			'initial_happiness' => 75,
+			'initial_tax_level' => 2,
+			'initial_balance' => 10000,
+			'house_cost' => 150,
+			'tax_per_house' => 30,
+			// ... (additional configuration)
+		];
 
-	if (!isset($_SESSION['current_events'])) {
-		$_SESSION['current_events'] = [];
-	}
+		$city = new City($cityConfig);
 
-    $city = isset($_SESSION['city']) ? $_SESSION['city'] : new City();
+		$config = isset($config) ? $config : []; // Provide default configuration if not set
+		if (!isset($_SESSION['city'])) {
+			$_SESSION['city'] = new City($config); // Pass the configuration settings to the City constructor
+		}
 
-    if (isset($_POST['new_game'])) {
-        $city = new City();
-    }
+		$city = $_SESSION['city']; // Retrieve the city object
 
-    if (isset($_POST['build_houses'])) {
-        $housesToBuild = isset($_POST['houses_to_build']) ? $_POST['houses_to_build'] : 0;
-        $city->buildHouses($housesToBuild);
-    }
+        // Ensure session variables are set
+        if (!isset($_SESSION['city'])) {
+            $_SESSION['city'] = new City($config); // Pass the configuration settings to the City constructor
+        }
 
-    if (isset($_POST['set_tax'])) {
-        $taxLevel = isset($_POST['tax_level']) ? $_POST['tax_level'] : 2;
-        $city->setTaxLevel($taxLevel);
-    }
+        if (!isset($_SESSION['game_year'])) {
+            $_SESSION['game_year'] = date('Y');
+        }
 
-    $city->addCitizen(1, 'John Doe');
-    $city->displayStats();
-    $_SESSION['city'] = $city;
+        if (!isset($_SESSION['current_events'])) {
+            $_SESSION['current_events'] = [];
+        }
+
+		$city = isset($_SESSION['city']) ? $_SESSION['city'] : new City(isset($config) ? $config : []);
+
+        if (isset($_POST['new_game'])) {
+            $city = new City('CityName');
+        }
+
+        if (isset($_POST['build_houses'])) {
+            $housesToBuild = isset($_POST['houses_to_build']) ? $_POST['houses_to_build'] : 0;
+            $city->buildHouses($housesToBuild);
+        }
+
+        if (isset($_POST['set_tax'])) {
+            $taxLevel = isset($_POST['tax_level']) ? $_POST['tax_level'] : 2;
+            $city->setTaxLevel($taxLevel);
+        }
+
+        $city->addCitizen(1, 'John Doe');
+        $city->displayStats();
+        $_SESSION['city'] = $city;
     ?>
 
     <form method="post" action="index.php">
@@ -74,6 +111,12 @@
         <input type="submit" name="new_game" value="Start New Game">
     </form>
 
+    <!-- Countdown bar elements -->
+    <div id="countdown-bar-title">Time Until Next Month:</div>
+    <div id="countdown-bar-container">
+        <div id="countdown-bar"></div>
+    </div>
+
     <script>
         function showLoadingSpinner() {
             document.getElementById('loading-spinner').style.display = 'block';
@@ -81,6 +124,24 @@
 
         function hideLoadingSpinner() {
             document.getElementById('loading-spinner').style.display = 'none';
+        }
+
+        function updateCountdownBar(remainingTime) {
+            var progressBar = document.getElementById('countdown-bar');
+            var container = document.getElementById('countdown-bar-container');
+
+            // Calculate the percentage of time remaining
+            var percentage = (remainingTime / 600000) * 100;
+
+            // Set the width of the progress bar
+            progressBar.style.width = percentage + '%';
+
+            // Show or hide the countdown bar based on remaining time
+            if (remainingTime > 0) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
         }
 
         function simulateMonth() {
@@ -96,6 +157,7 @@
                     console.log(response);
                     displayNotifications(response.notifications);
                     updateYear(response.currentYear);
+                    updateCountdownBar(600000); // Reset the countdown to 10 minutes after each simulation
                 } else {
                     console.error('Error:', xhr.statusText);
                     alert('An error occurred while simulating the month. Please try again.');
@@ -109,7 +171,19 @@
             document.getElementById('current-year').textContent = 'Current Year: ' + year;
         }
 
-        setInterval(simulateMonth, 600000); // 10 minutes in milliseconds
+        // Initial setup for countdown bar
+        updateCountdownBar(600000);
+
+        // Update the countdown bar every second
+        setInterval(function () {
+            var remainingTime = 600000; // Initial value, assuming the next simulation is in 10 minutes
+
+            // Update the countdown bar
+            updateCountdownBar(remainingTime);
+
+            // Update the remaining time by subtracting 1000 milliseconds (1 second)
+            remainingTime -= 1000;
+        }, 1000);
 
         function displayNotifications(notifications) {
             notifications.forEach(function (notification) {

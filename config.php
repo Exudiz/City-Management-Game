@@ -1,4 +1,7 @@
 <?php
+// Configuration settings for the city management game
+$config = require 'config_settings.php';
+
 require_once 'City.php';
 
 // Start the session

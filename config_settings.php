@@ -1,12 +1,16 @@
 <?php
+require_once 'City.php';
 
-return [
-    'initial_population' => 100,
+$config = [
+    'initial_population' => 1000,
     'initial_houses' => 0,
-    'initial_homeless' => 0,
-    'initial_happiness' => 100,
+    'initial_homeless' => 50,
+    'initial_happiness' => 75,
     'initial_tax_level' => 2,
-    'initial_balance' => 1000,
-    'house_cost' => 100,
-    'tax_per_house' => 20,
+    'initial_balance' => 10000,
+    'house_cost' => 150,
+    'tax_per_house' => 30,
+    // ... (additional configuration)
 ];
+
+$city = new City($config);

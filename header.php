@@ -24,6 +24,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="citizens.php">Citizens</a>
                     </li>
+					<li class="nav-item">
+                        <a class="nav-link" href="info.php">Info</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="last_notifications.php">
                             Notifications <?php echo getNotificationCount(); ?>
